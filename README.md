@@ -56,13 +56,13 @@ ResidenceHub streamlines residential community management with features for tick
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/residence-hub.git
+   git clone https://github.com/theBCA/residence-hub.git
    cd residence-hub
    ```
 
 2. **Install dependencies**
    ```bash
-   cd apartment_superapp
+   cd residence-hub
    flutter pub get
    ```
 
