@@ -56,7 +56,7 @@ ResidenceHub streamlines residential community management with features for tick
 
 1. **Clone the repository**
    ```bash
-   git clone https://gitlab.com/your-username/residence-hub.git
+   git clone https://github.com/YOUR_USERNAME/residence-hub.git
    cd residence-hub
    ```
 
@@ -125,7 +125,7 @@ ResidenceHub follows Clean Architecture principles with:
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Merge Request
+5. Open a Pull Request
 
 ## 📄 License
 
