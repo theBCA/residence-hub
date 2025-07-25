@@ -55,7 +55,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     try {
       await Supabase.instance.client.auth.resetPasswordForEmail(
         _emailController.text,
-        redirectTo: 'https://thebca.github.io/residence-hub/residence-hub/reset-password.html',
+        redirectTo: 'https://thebca.github.io/residence-hub/',
       );
       
       if (mounted) {
