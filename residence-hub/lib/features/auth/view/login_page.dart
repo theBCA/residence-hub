@@ -41,6 +41,40 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     }
   }
 
+  Future<void> _resetPassword() async {
+    if (_emailController.text.isEmpty) {
+      setState(() => _error = 'Please enter your email address first');
+      return;
+    }
+    
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    
+    try {
+      await Supabase.instance.client.auth.resetPasswordForEmail(
+        _emailController.text,
+      );
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Password reset email sent! Check your inbox. Click the link to reset your password.'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 5),
+          ),
+        );
+      }
+    } on AuthException catch (e) {
+      setState(() => _error = e.message);
+    } catch (e) {
+      setState(() => _error = e.toString());
+    } finally {
+      setState(() => _loading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -104,7 +138,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               ),
               const SizedBox(height: 16),
               TextButton(
-                onPressed: () {}, // TODO: Implement forgot password
+                onPressed: _resetPassword,
                 child: const Text('Forgot password?'),
               ),
               const SizedBox(height: 16),

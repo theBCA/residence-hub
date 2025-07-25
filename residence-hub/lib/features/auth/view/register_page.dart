@@ -15,7 +15,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
-  final _otpController = TextEditingController();
   bool _loading = false;
   String? _error;
 
@@ -29,17 +28,51 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         setState(() => _error = 'Passwords do not match');
         return;
       }
-      await Supabase.instance.client.auth.signInWithOtp(
+      
+      if (_passwordController.text.length < 6) {
+        setState(() => _error = 'Password must be at least 6 characters');
+        return;
+      }
+      
+      // Try to sign up with email and password
+      final response = await Supabase.instance.client.auth.signUp(
         email: _emailController.text,
+        password: _passwordController.text,
       );
-              if (mounted) {
-          setState(() {
-            _loading = false;
-          });
-          _showOtpDialog();
+      
+      if (response.user != null) {
+        // Check if user needs email confirmation
+        if (response.session == null) {
+          // Email confirmation required
+          if (mounted) {
+            setState(() => _loading = false);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Please check your email to confirm your account.'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+        } else {
+          // User is immediately logged in
+          if (mounted) {
+            await Future.delayed(const Duration(milliseconds: 500));
+            if (mounted) {
+              context.go('/');
+            }
+          }
         }
+      } else {
+        setState(() => _error = 'Registration failed. Please try again.');
+      }
     } on AuthException catch (e) {
-      setState(() => _error = e.message);
+      if (e.message.contains('already registered') || 
+          e.message.contains('already exists') ||
+          e.message.contains('User already registered')) {
+        setState(() => _error = 'This email is already registered. Please use the login page instead.');
+      } else {
+        setState(() => _error = e.message);
+      }
     } catch (e) {
       setState(() => _error = e.toString());
     } finally {
@@ -47,82 +80,11 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     }
   }
 
-  Future<void> _verifyOtp() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      final response = await Supabase.instance.client.auth.verifyOTP(
-        type: OtpType.email,
-        email: _emailController.text,
-        token: _otpController.text,
-      );
-      if (response.user == null) {
-        if (mounted) {
-          setState(() => _error = 'Invalid OTP');
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Invalid OTP. Please try again.')),
-          );
-        }
-      } else {
-        if (mounted) {
-          Navigator.of(context).pop(); // Close OTP dialog
-          context.go('/'); // Go to main app
-        }
-      }
-    } on AuthException catch (e) {
-      if (mounted) {
-        setState(() => _error = e.message);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message)),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _error = e.toString());
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
-        );
-      }
-    } finally {
-      setState(() => _loading = false);
-    }
-  }
+  // Remove the old OTP verification method since we're using password-based registration
+  // Future<void> _verifyOtp() async { ... }
 
-  void _showOtpDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text('Enter OTP'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _otpController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: '6-digit code'),
-            ),
-            if (_loading) const Padding(
-              padding: EdgeInsets.only(top: 16),
-              child: CircularProgressIndicator(),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: _loading ? null : _verifyOtp,
-            child: const Text('Verify'),
-          ),
-        ],
-      ),
-    );
-  }
+  // Remove the OTP dialog since we're not using OTP anymore
+  // void _showOtpDialog() { ... }
 
   @override
   Widget build(BuildContext context) {
@@ -177,7 +139,24 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               if (_error != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 16),
-                  child: Text(_error!, style: const TextStyle(color: Colors.red)),
+                  child: Column(
+                    children: [
+                      Text(_error!, style: const TextStyle(color: Colors.red)),
+                      if (_error!.contains('already registered'))
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: TextButton.icon(
+                            onPressed: () {
+                              Navigator.of(context).pushReplacement(
+                                MaterialPageRoute(builder: (_) => const LoginPage()),
+                              );
+                            },
+                            icon: const Icon(Icons.arrow_back),
+                            label: const Text('Go to Login'),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               const SizedBox(height: 24),
               SizedBox(
