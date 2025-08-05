@@ -55,13 +55,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     try {
       await Supabase.instance.client.auth.resetPasswordForEmail(
         _emailController.text,
-        redirectTo: 'https://thebca.github.io/residence-hub/',
+        // Temporarily remove redirect URL until GitHub Pages is fixed
       );
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Password reset email sent! Check your inbox. Click the link to reset your password.'),
+            content: Text('Password reset email sent! Check your inbox and follow the link to reset your password.'),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 5),
           ),
